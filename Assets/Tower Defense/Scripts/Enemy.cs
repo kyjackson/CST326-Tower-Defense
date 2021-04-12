@@ -2,34 +2,45 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Transactions;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class Enemy : MonoBehaviour
 {
-    private int smallEnemyValue = 5;
-    public float health = 100;
-    public float speed = .25f;
-
-    private float healthPerUnit;
-    public Transform healthBar;
-
+    public GameObject buttonRestart;
     public Path route;
     private Waypoint[] myPathThroughLife;
+    public int coinWorth;
+    public float health = 100;
+    public float speed = .25f;
+    public float hitAmount = 10;
     private int index = 0;
     private Vector3 nextWaypoint;
     private bool stop = false;
-
-    public GameObject purseManager;
+    private float healthPerUnit;
+    public List<Tower> currentTowers;
+    public Tower currentTarget;
+    public AudioSource deathSound;
+    public GameObject death;
     public PurseManager purse;
+    
+
+    public Transform healthBar;
+
+    public UnityEvent DeathEvent;
 
     void Start()
     {
-        healthPerUnit = 100f / health;
+        purse = GameObject.Find("PurseManager").GetComponent<PurseManager>();
+        buttonRestart = GameObject.Find("Restart");
         
+        death = GameObject.Find("death");
+        deathSound = death.GetComponent<AudioSource>();
+        healthPerUnit = 100f / health;
+
         myPathThroughLife = route.path;
         transform.position = myPathThroughLife[index].transform.position;
         Recalculate();
-
-        purse = purseManager.GetComponent<PurseManager>();
     }
 
     void Update()
@@ -45,8 +56,12 @@ public class Enemy : MonoBehaviour
 
             Vector3 moveThisFrame = nextWaypoint * Time.deltaTime * speed;
             transform.Translate(moveThisFrame);
-        }
 
+            if (purse.totalKilled >= 7)
+            {
+                buttonRestart.SetActive(true);
+            }
+        }
     }
 
     void Recalculate()
@@ -64,13 +79,25 @@ public class Enemy : MonoBehaviour
 
     public void Damage()
     {
-        health -= 20;
+        Damage(20);
+    }
+
+
+    public void Damage(float hitAmount)
+    {
+        health -= hitAmount;
+        
         if (health <= 0)
         {
-            Debug.Log($"{transform.name} is Dead");
-            Destroy(this.gameObject);
+            deathSound.Play();
 
-            purse.setBalance(purse.getBalance() + smallEnemyValue);
+            Debug.Log($"{transform.name} is Dead");
+            DeathEvent.Invoke();
+            DeathEvent.RemoveAllListeners();
+
+            Destroy(this.gameObject);
+            purse.totalKilled++;
+            Debug.Log("enemies killed = "+purse.totalKilled);
         }
 
         float percentage = healthPerUnit * health;
@@ -78,4 +105,47 @@ public class Enemy : MonoBehaviour
         healthBar.localScale = newHealthAmount;
     }
 
+    //void OnTriggerEnter(Collider collider)
+    //{
+    //    //laser.enabled = true;
+    //    if (collider.GetComponent<Tower>() != null)
+    //    {
+    //        Tower newTower = collider.GetComponent<Tower>();
+    //        newTower.DeathEvent.AddListener(delegate { BookKeeping(newTower); });
+    //        currentTowers.Add(newTower);
+    //        if (currentTarget == null)
+    //        {
+    //            currentTarget = newTower;
+    //        }
+    //        currentTarget.Damage(hitAmount);
+    //        Debug.Log("Tower health: " + currentTarget.health);
+    //    }
+    //}
+
+    //void OnTriggerExit(Collider collider)
+    //{
+    //    if (collider.GetComponent<Tower>() != null)
+    //    {
+    //        Tower oldTower = collider.GetComponent<Tower>();
+    //        BookKeeping(oldTower);
+    //    }
+    //}
+
+    //void BookKeeping(Tower tower)
+    //{
+    //    currentTowers.Remove(tower);
+
+    //    if (currentTowers.Count > 0)
+    //    {
+    //        //laser.enabled = true;
+    //        currentTarget = currentTowers[0];
+    //    }
+    //    else
+    //    {
+    //        //laser.enabled = false;
+    //        currentTarget = null;
+    //    }
+    //    //currentTarget = (currentEnemies.Count > 0) ? currentEnemies[0] : null;
+
+    //}
 }

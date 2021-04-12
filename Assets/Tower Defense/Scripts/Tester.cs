@@ -4,28 +4,28 @@ using UnityEngine;
 
 public class Tester : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
-    // Update is called once per frame
-    void Update()
+  // Update is called once per frame
+  void Update()
+  {
+    if (Input.GetMouseButtonDown(0))
     {
-      if (Input.GetMouseButtonDown(0))
+      Ray ray = Camera.main.ScreenPointToRay(new Vector3(Input.mousePosition.x, Input.mousePosition.y,
+        Camera.main.transform.position.z));
+
+      RaycastHit[] hits;
+      hits = Physics.RaycastAll(ray.origin, ray.direction, 100.0F);
+
+      for (int i = 0; i < hits.Length; i++)
       {
-        Ray ray = Camera.main.ScreenPointToRay(new Vector3(Input.mousePosition.x, Input.mousePosition.y,
-          Camera.main.transform.position.z));
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit))
-          if (hit.transform.tag == "Enemy")
-          {
-            hit.transform.GetComponent<Enemy>().Damage();
-          }
-          else
-            print("I'm looking at nothing!");
+        RaycastHit hit = hits[i];
 
+        if (hit.transform.tag == "Enemy")
+        {
+          hit.transform.GetComponent<Enemy>().Damage();
+        }
       }
+
     }
+  }
 }

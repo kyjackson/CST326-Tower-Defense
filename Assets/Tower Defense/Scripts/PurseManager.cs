@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class PurseManager : MonoBehaviour
 {
+    public int totalKilled = 0;
     public int coins = 0;
     private int defaultCoins = 40;
 
